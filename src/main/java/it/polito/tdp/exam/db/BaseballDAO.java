@@ -41,7 +41,9 @@ public class BaseballDAO {
 	}
 
 	public List<Team> readAllTeams() {
-		String sql = "SELECT * " + "FROM  teams";
+		String sql = "SELECT DISTINCT * "
+				+ "FROM teams t "
+				+ "GROUP BY t.name ";
 		List<Team> result = new ArrayList<Team>();
 
 		try {
@@ -156,4 +158,61 @@ public class BaseballDAO {
 		return null;
 	}
 
+	public List<Integer> readAllAnni(String teamName) {
+		String sql = "SELECT DISTINCT t.year "
+				+ "FROM teams t "
+				+ "WHERE t.name = ? ";
+		List<Integer> result = new ArrayList<>();
+
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, teamName);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				Integer anno = rs.getInt("year");
+				result.add(anno);
+			}
+
+			conn.close();
+			return result;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+
+}
+
+	public Integer getSalarioNellAnno(Integer anno, Team t) {
+		String sql = "SELECT s.salary AS peso "
+				+ "FROM salaries s, teams t "
+				+ "WHERE s.year = ? "
+				+ "AND s.teamCode = t.teamCode AND t.name = ? "
+				+ "GROUP BY s.playerID ";
+		Integer salario = 0;
+
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, anno);
+			st.setString(2, t.getName());
+			ResultSet rs = st.executeQuery();
+
+			while(rs.next()) {
+				Integer s = rs.getInt("peso");
+				salario += s;
+			}
+			conn.close();
+			return salario;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+	
 }
